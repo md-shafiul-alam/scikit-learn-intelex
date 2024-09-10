@@ -282,7 +282,7 @@ if daal_check_version((2023, "P", 200)):
                         FutureWarning,
                     )
             if queue is None or queue.sycl_device.is_cpu:
-                return _daal4py_k_means_predict(X, self.n_clusters, self.cluster_centers_)
+                return _daal4py_k_means_predict(X, self.n_clusters, self.cluster_centers_)[0]
 
             if not hasattr(self, "_onedal_estimator"):
                 self._initialize_onedal_estimator()
