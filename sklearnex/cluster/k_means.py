@@ -35,7 +35,7 @@ if daal_check_version((2023, "P", 200)):
     )
 
     from daal4py.sklearn._n_jobs_support import control_n_jobs
-    from daal4py.sklearn.cluster.k_means import daal4py_predict
+    from daal4py.sklearn.cluster.k_means import _daal4py_k_means_predict
     from daal4py.sklearn._utils import sklearn_check_version
     from onedal.cluster import KMeans as onedal_KMeans
     from onedal.utils import _is_csr
@@ -79,7 +79,7 @@ if daal_check_version((2023, "P", 200)):
                 algorithm=algorithm,
             )
 
-        _onedal_cpu_predict = daal4py_predict
+        _onedal_cpu_predict = _daal4py_k_means_predict
         def _initialize_onedal_estimator(self):
             onedal_params = {
                 "n_clusters": self.n_clusters,
@@ -263,9 +263,6 @@ if daal_check_version((2023, "P", 200)):
                 )
 
         def _onedal_predict(self, X, sample_weight=None, queue=None):
-            if queue is None or queue.sycl_device.is_cpu:
-                return self._onedal_cpu_predict(X, y, sample_weight)
-
             check_is_fitted(self)
 
             X = self._validate_data(
@@ -285,6 +282,8 @@ if daal_check_version((2023, "P", 200)):
                         "will be removed in 1.5.",
                         FutureWarning,
                     )
+            if queue is None or queue.sycl_device.is_cpu:
+                return self._onedal_cpu_predict(X, len(self.cluster_centers_), self.cluster_centers_)
 
             if not hasattr(self, "_onedal_estimator"):
                 self._initialize_onedal_estimator()
