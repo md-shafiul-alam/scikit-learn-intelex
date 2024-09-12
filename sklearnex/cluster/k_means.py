@@ -109,7 +109,15 @@ if daal_check_version((2023, "P", 200)):
                 _is_csr(X) and daal_check_version((2024, "P", 700))
             ) or not issparse(X)
 
-            _acceptable_sample_weights = self._validate_sample_weight(sample_weight, X)
+            if sample_weight is None or isinstance(sample_weight, numbers.Number):
+                _acceptable_sample_weights = True
+            else:
+                sample_weight = _check_sample_weight(
+                    sample_weight,
+                    X,
+                    dtype=X.dtype if hasattr(X, "dtype") else None,
+                )
+                _acceptable_sample_weights = np.all(sample_weight == sample_weight[0])
 
             patching_status.and_conditions(
                 [
@@ -172,17 +180,6 @@ if daal_check_version((2023, "P", 200)):
 
             self._save_attributes()
 
-        def _validate_sample_weight(self, sample_weight, X):
-            if sample_weight is None or isinstance(sample_weight, numbers.Number):
-                return True
-            
-            sample_weight = _check_sample_weight(
-                sample_weight,
-                X,
-                dtype=X.dtype if hasattr(X, "dtype") else None,
-            )
-            return np.all(sample_weight == sample_weight[0])
-
         def _onedal_predict_supported(self, method_name, X, sample_weight=None):
             class_name = self.__class__.__name__
             is_data_supported = (
@@ -202,9 +199,15 @@ if daal_check_version((2023, "P", 200)):
 
             _acceptable_sample_weights = True
             if not sklearn_check_version("1.5"):
-                _acceptable_sample_weights = self._validate_sample_weight(
-                    sample_weight, X
-                )
+                if sample_weight is None or isinstance(sample_weight, numbers.Number):
+                    _acceptable_sample_weights = True
+                else:
+                    sample_weight = _check_sample_weight(
+                        sample_weight,
+                        X,
+                        dtype=X.dtype if hasattr(X, "dtype") else None,
+                    )
+                    _acceptable_sample_weights = np.all(sample_weight == sample_weight[0])
 
             patching_status.and_conditions(
                 [
