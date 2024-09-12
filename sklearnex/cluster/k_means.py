@@ -173,20 +173,15 @@ if daal_check_version((2023, "P", 200)):
             self._save_attributes()
 
         def _validate_sample_weight(self, sample_weight, X):
-            if sample_weight is None:
+            if sample_weight is None or isinstance(sample_weight, numbers.Number):
                 return True
-            elif isinstance(sample_weight, numbers.Number):
-                return True
-            else:
-                sample_weight = _check_sample_weight(
-                    sample_weight,
-                    X,
-                    dtype=X.dtype if hasattr(X, "dtype") else None,
-                )
-                if np.all(sample_weight == sample_weight[0]):
-                    return True
-                else:
-                    return False
+            
+            sample_weight = _check_sample_weight(
+                sample_weight,
+                X,
+                dtype=X.dtype if hasattr(X, "dtype") else None,
+            )
+            return np.all(sample_weight == sample_weight[0])
 
         def _onedal_predict_supported(self, method_name, X, sample_weight=None):
             class_name = self.__class__.__name__
